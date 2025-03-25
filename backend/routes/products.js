@@ -2,22 +2,31 @@ const express = require("express");
 const Product = require("../models/product");
 const jwt = require("jsonwebtoken");
 const multer = require("multer");
-const path = require("path");
-const fs = require("fs");
+const { v2: cloudinary } = require("cloudinary");
+const { CloudinaryStorage } = require("multer-storage-cloudinary");
 const router = express.Router();
 
-// Multer configuration
-const storage = multer.diskStorage({
-  destination: (req, file, cb) => {
-    cb(null, path.join(__dirname, "../images")); // Save images to "images" folder
-  },
-  filename: (req, file, cb) => {
-    cb(null, `${Date.now()}-${file.originalname}`); // Unique filename
+// Configure Cloudinary
+cloudinary.config({
+  cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
+  api_key: process.env.CLOUDINARY_API_KEY,
+  api_secret: process.env.CLOUDINARY_API_SECRET,
+});
+
+// Multer storage using Cloudinary
+const storage = new CloudinaryStorage({
+  cloudinary,
+  params: {
+    folder: "product_images", // Cloudinary folder
+    format: async (req, file) => "png", // Convert all images to PNG
+    public_id: (req, file) =>
+      `${Date.now()}-${file.originalname.split(".")[0]}`,
   },
 });
+
 const upload = multer({ storage });
 
-// Add a product (Admin Only) with image upload
+// Add a product (Admin Only) with Cloudinary image upload
 router.post("/", upload.single("image"), async (req, res) => {
   try {
     const authHeader = req.headers.authorization;
@@ -33,7 +42,7 @@ router.post("/", upload.single("image"), async (req, res) => {
     if (decoded.role !== "admin") {
       return res.status(403).json({ message: "Only admins can add products" });
     }
-    console.log(req.body, req.headers);
+
     const newProduct = new Product({
       name: req.body.name.trim().toLowerCase(),
       price: req.body.price,
@@ -49,7 +58,8 @@ router.post("/", upload.single("image"), async (req, res) => {
         ? req.body.tags
         : req.body.tags.split(",").map((tag) => tag.trim()),
       isFeatured: req.body.isFeatured,
-      imageUrl: `/images/${req.file.filename}`, // Save the file path
+      imageUrl: req.file.path || req.file.secure_url,
+      cloudinaryId: req.file.filename || req.file.public_id,
       createdAt: new Date(),
     });
 
@@ -64,9 +74,6 @@ router.post("/", upload.single("image"), async (req, res) => {
   }
 });
 
-// Serve static images
-router.use("/images", express.static(path.join(__dirname, "../images")));
-
 // Get all products
 router.get("/", async (req, res) => {
   try {
@@ -77,23 +84,23 @@ router.get("/", async (req, res) => {
   }
 });
 
+// Get a single product
 router.get("/:id", async (req, res) => {
   try {
     const product = await Product.findById(req.params.id);
     if (!product) {
       return res.status(404).json({ message: "Product not found" });
     }
+    console.log("Stored Image URL:", product.imageUrl);
     res.json(product);
   } catch (error) {
-    console.error("Error fetching product:", error);
-    res.status(500).json({ message: "Server error" });
+    res.status(500).json({ message: "Server error", error: error.message });
   }
 });
 
-// Additional routes like Update, Delete, etc., remain unchanged but can now handle imageUrl if needed.
+// Update a product
 router.put("/:id", upload.single("image"), async (req, res) => {
   try {
-    // Authorization check
     const authHeader = req.headers.authorization;
     if (!authHeader || !authHeader.startsWith("Bearer ")) {
       return res
@@ -113,7 +120,6 @@ router.put("/:id", upload.single("image"), async (req, res) => {
     const { id } = req.params;
     const updates = req.body;
 
-    // Convert "tags" from JSON string back to an array if present
     if (updates.tags) {
       try {
         updates.tags = JSON.parse(updates.tags);
@@ -124,12 +130,15 @@ router.put("/:id", upload.single("image"), async (req, res) => {
 
     // Handle image update if provided
     if (req.file) {
-      updates.imageUrl = `data:${
-        req.file.mimetype
-      };base64,${req.file.buffer.toString("base64")}`;
+      const product = await Product.findById(id);
+      if (product && product.cloudinaryId) {
+        await cloudinary.uploader.destroy(product.cloudinaryId); // Delete old image from Cloudinary
+      }
+
+      updates.imageUrl = req.file.path; // New image URL
+      updates.cloudinaryId = req.file.filename; // New public_id
     }
 
-    // Find and update product
     const updatedProduct = await Product.findByIdAndUpdate(id, updates, {
       new: true,
     });
@@ -148,9 +157,9 @@ router.put("/:id", upload.single("image"), async (req, res) => {
   }
 });
 
+// Delete a product
 router.delete("/:id", async (req, res) => {
   try {
-    // Authorization check
     const authHeader = req.headers.authorization;
     if (!authHeader || !authHeader.startsWith("Bearer ")) {
       return res
@@ -168,24 +177,16 @@ router.delete("/:id", async (req, res) => {
     }
 
     const { id } = req.params;
-
-    // Find product
     const product = await Product.findById(id);
     if (!product) {
       return res.status(404).json({ message: "Product not found" });
     }
 
-    // ✅ Correct Image Path
-    if (product.imageUrl) {
-      const imagePath = path.join(__dirname, "..", product.imageUrl);
-      if (fs.existsSync(imagePath)) {
-        fs.unlinkSync(imagePath); // Delete file from server
-      }
+    if (product.cloudinaryId) {
+      await cloudinary.uploader.destroy(product.cloudinaryId); // Delete image from Cloudinary
     }
 
-    // Remove product from DB
     await Product.findByIdAndDelete(id);
-
     res.status(200).json({ message: "Product deleted successfully" });
   } catch (error) {
     console.error("Delete Error:", error);

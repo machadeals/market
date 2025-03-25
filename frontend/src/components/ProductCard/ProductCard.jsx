@@ -56,7 +56,6 @@ const ProductCard = ({ product, isAdmin }) => {
             <EditIcon />
           </IconButton>
         )}
-
         {/* Discount Badge (Top Left) */}
         {product.discount > 0 && (
           <Box
@@ -87,11 +86,10 @@ const ProductCard = ({ product, isAdmin }) => {
             cursor: "pointer",
             background: "#f5f5f5",
           }}
-          image={`${burl}/products/${product.imageUrl}`}
+          image={`${product.imageUrl}`}
           alt={product.name}
           onClick={() => navigate(`/product/${product._id}`)}
         />
-
         <CardContent>
           {/* Product Title */}
           <Typography
