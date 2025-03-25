@@ -30,9 +30,7 @@ const HomePage = () => {
         const response = await axios.get(`${burl}/display/carousel`);
 
         // Add base URL to each image path
-        const fullImageUrls = response.data.map(
-          (image) => `${burl}/display${image}`
-        );
+        const fullImageUrls = response.data.map((image) => `${image.url}`);
 
         setCarouselImages(fullImageUrls);
       } catch (error) {
