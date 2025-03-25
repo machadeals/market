@@ -15,6 +15,8 @@ const ProductSchema = new mongoose.Schema(
     tags: { type: [String], default: [] }, // Array of tags for searching
     isFeatured: { type: Boolean, default: false }, // Featured status
     imageUrl: { type: String, required: true },
+    cloudinaryId: { type: String, required: true },
+    createdAt: { type: Date, default: Date.now },
   },
   { timestamps: true }
 );

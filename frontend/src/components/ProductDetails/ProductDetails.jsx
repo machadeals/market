@@ -84,7 +84,7 @@ const ProductDetails = () => {
           <CardMedia
             component="img"
             height="400"
-            image={`${burl}/products/${imageUrl}`}
+            image={`${imageUrl}`}
             alt={name}
             sx={{ objectFit: "contain", background: "#f5f5f5" }}
           />
@@ -98,7 +98,7 @@ const ProductDetails = () => {
               color="primary"
               sx={{ fontWeight: "bold" }}
             >
-              Price: ${price}
+              Price: ₹{price}
             </Typography>
             <Typography
               variant="body1"
