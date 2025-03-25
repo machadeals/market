@@ -153,7 +153,7 @@ const ProductDetails = () => {
                     <CardMedia
                       component="img"
                       height="200"
-                      image={`${burl}/products/${prod.imageUrl}`}
+                      image={`${prod.imageUrl}`}
                       alt={prod.name}
                       sx={{ objectFit: "contain", background: "#f5f5f5" }}
                     />
