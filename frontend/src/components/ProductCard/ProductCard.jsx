@@ -90,13 +90,25 @@ const ProductCard = ({ product, isAdmin }) => {
           alt={product.name}
           onClick={() => navigate(`/product/${product._id}`)}
         />
-        <CardContent>
+        <CardContent
+          sx={{
+            height: 195,
+            display: "flex",
+            flexDirection: "column",
+            justifyContent: "space-between",
+          }}
+        >
           {/* Product Title */}
           <Typography
             variant="h6"
             sx={{
               fontWeight: "bold",
               cursor: "pointer",
+              display: "-webkit-box",
+              WebkitBoxOrient: "vertical",
+              WebkitLineClamp: 2, // Limits to 2 lines
+              overflow: "hidden",
+              textOverflow: "ellipsis",
               "&:hover": { color: "primary.main" },
             }}
             onClick={() => navigate(`/product/${product._id}`)}
