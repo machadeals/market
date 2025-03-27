@@ -3,11 +3,12 @@ const express = require("express");
 const mongoose = require("mongoose");
 const bodyParser = require("body-parser");
 const cors = require("cors");
-
+const cron = require("node-cron");
 const authRoutes = require("./routes/auth");
 const adRoutes = require("./routes/ads");
 const productRoutes = require("./routes/products");
 const carouselRoutes = require("./routes/carousel");
+const updatePrices = require("./updatePrices");
 
 const app = express();
 const PORT = process.env.PORT || 5000;
@@ -36,6 +37,17 @@ mongoose
   .then(() => {
     console.log("✅ Connected to MongoDB Atlas");
     app.listen(PORT, () => console.log(`🚀 Server running on port ${PORT}`));
+
+    cron.schedule(
+      "0 10 * * *",
+      async () => {
+        console.log("🔄 Running daily price update at 10 AM...");
+        await updatePrices();
+      },
+      {
+        timezone: "Asia/Kolkata",
+      }
+    );
   })
   .catch((error) => {
     console.error("❌ MongoDB connection error:", error);
