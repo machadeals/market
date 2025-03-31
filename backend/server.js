@@ -30,16 +30,13 @@ app.use("/products", productRoutes);
 app.use("/display", carouselRoutes);
 
 mongoose
-  .connect(process.env.MONGO_URI, {
-    useNewUrlParser: true,
-    useUnifiedTopology: true,
-  })
+  .connect(process.env.MONGO_URI, {})
   .then(() => {
     console.log("✅ Connected to MongoDB Atlas");
     app.listen(PORT, () => console.log(`🚀 Server running on port ${PORT}`));
 
     cron.schedule(
-      "0 10 * * *",
+      "0 18 * * *",
       async () => {
         console.log("🔄 Running daily price update at 10 AM...");
         await updatePrices();
