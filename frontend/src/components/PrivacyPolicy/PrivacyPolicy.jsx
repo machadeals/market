@@ -138,7 +138,7 @@ const PrivacyPolicy = () => {
           <strong>Email:</strong> machadealsecom@gmail.com
         </Typography>
         <Typography variant="body1">
-          <strong>Website:</strong> Machadeals.com
+          <strong>Website:</strong> machadeals.com
         </Typography>
       </Paper>
     </Container>
