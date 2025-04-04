@@ -10,7 +10,11 @@ const TermsOfUse = () => (
       <Typography variant="body1" color="text.secondary">
         By using Machadeals, you agree to comply with our terms and conditions.
         We are not responsible for the products or services provided by
-        affiliate partners.
+        affiliate partners. When you click on 'Buy Now', you will be redirected
+        to external affiliate websites, such as Amazon or Meesho, where you can
+        complete your purchase. Please note that these are affiliate links, and
+        we may earn a small commission if you make a purchase through these
+        links, at no extra cost to you.
       </Typography>
     </Box>
   </Container>
